@@ -1,0 +1,16 @@
+# Environment
+.venv/
+
+# Data
+data/*
+!data/script.txt
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Pytest
+.pytest_cache/
+
+# Packaging
+*.egg-info/

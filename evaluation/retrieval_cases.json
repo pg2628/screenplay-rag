@@ -1,0 +1,62 @@
+[
+    {
+        "question": "What happens on Day Two?",
+        "expected_scene_numbers": [
+            4
+        ]
+    },
+    {
+        "question": "Why does Zaki want to stop fighting?",
+        "expected_scene_numbers": [
+            3
+        ]
+    },
+    {
+        "question": "What happens when Najjad shoots the general with the pistol?",
+        "expected_scene_numbers": [
+            6
+        ]
+    },
+    {
+        "question": "Who kills the farmer at the beginning?",
+        "expected_scene_numbers": [
+            1
+        ]
+    },
+    {
+        "question": "What happens in the People's Camp?",
+        "expected_scene_numbers": [
+            3
+        ]
+    },
+    {
+        "question": "What does Najjad use on Day Three?",
+        "expected_scene_numbers": [
+            5
+        ]
+    },
+    {
+        "question": "Who says that war is thankless?",
+        "expected_scene_numbers": [
+            3
+        ]
+    },
+    {
+        "question": "What happens to Zaki?",
+        "expected_scene_numbers": [
+            4
+        ]
+    },
+    {
+        "question": "What happens to the state military?",
+        "expected_scene_numbers": [
+            5
+        ]
+    },
+    {
+        "question": "What does the general say about freedom?",
+        "expected_scene_numbers": [
+            1
+        ]
+    }
+]
