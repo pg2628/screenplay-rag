@@ -15,12 +15,13 @@ def test_build_prompt_contains_role_question_and_scene_evidence():
         ],
     )
 
-    assert "Assistant Director" in prompt
-    assert ASSISTANT_DIRECTOR.instructions in prompt
-    assert "What production requirements does this scene have?" in prompt
-    assert "Scene 4: EXT. DESERT CRATER - DAY" in prompt
-    assert "The People prepare for another battle." in prompt
-    assert "Do not invent cast" in prompt
+    assert "Assistant Director" in prompt.system
+    assert ASSISTANT_DIRECTOR.instructions in prompt.system
+    assert "Do not invent cast" in prompt.system
+    assert "What production requirements does this scene have?" in prompt.user
+    assert "Scene 4: EXT. DESERT CRATER - DAY" in prompt.user
+    assert "The People prepare for another battle." in prompt.user
+    assert "Do not invent cast" not in prompt.user
 
 
 def test_build_prompt_is_deterministic_for_empty_evidence():
@@ -28,4 +29,4 @@ def test_build_prompt_is_deterministic_for_empty_evidence():
     second = build_prompt(ASSISTANT_DIRECTOR, "What is known?", [])
 
     assert first == second
-    assert "No screenplay scenes were retrieved." in first
+    assert "No screenplay scenes were retrieved." in first.user

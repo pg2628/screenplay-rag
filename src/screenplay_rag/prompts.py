@@ -1,14 +1,24 @@
 """Deterministic prompt construction for screenplay roles."""
 
+from dataclasses import dataclass
+
 from .roles import Role
+
+
+@dataclass(frozen=True)
+class Prompt:
+    """Separate stable role behavior from request-specific content."""
+
+    system: str
+    user: str
 
 
 def build_prompt(
     role: Role,
     question: str,
     scenes: list[dict[str, object]],
-) -> str:
-    """Build a grounded prompt from a role, question, and retrieved scenes."""
+) -> Prompt:
+    """Build separate system and user prompts for a role and retrieved scenes."""
     output_sections = "\n".join(f"- {section}" for section in role.output_sections)
     grounding_rules = "\n".join(f"- {rule}" for rule in role.grounding_rules)
     abstention_rules = "\n".join(f"- {rule}" for rule in role.abstention_rules)
@@ -22,7 +32,7 @@ def build_prompt(
 
     evidence_text = "\n\n".join(evidence) or "No screenplay scenes were retrieved."
 
-    return f"""You are acting as the {role.display_name}.
+    system = f"""You are acting as the {role.display_name}.
 
 Role instructions:
 {role.instructions}
@@ -35,10 +45,13 @@ Grounding rules:
 
 Abstention rules:
 {abstention_rules}
+"""
 
-User question:
+    user = f"""User question:
 {question}
 
 Retrieved screenplay evidence:
 {evidence_text}
 """
+
+    return Prompt(system=system, user=user)
