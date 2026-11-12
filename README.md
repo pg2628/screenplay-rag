@@ -17,9 +17,10 @@ screenplay
 - Scene-aware screenplay parser
 - Heading-aware text prepared for embeddings
 - TF-IDF and cosine-similarity retrieval
+- Ollama semantic retrieval with `granite-embedding:278m`
 - Assistant Director and Producer roles
 - Grounded prompts with screenplay evidence
-- Local Ollama answer generation
+- Custom and parallel LangChain Ollama answer providers
 - Pytest test suite
 - Retrieval evaluation workflow with Hit@1 and Hit@3 metrics
 
@@ -49,7 +50,7 @@ python -m pytest
 Set the Ollama model and run the role-based assistant:
 
 ```bash
-export OLLAMA_MODEL=llama3.2
+export OLLAMA_MODEL=granite4.2:3b
 python assistant.py --role assistant_director
 ```
 
@@ -66,16 +67,23 @@ Run the retrieval evaluation workflow:
 python scripts/evaluate_retrieval.py
 ```
 
-The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and reports the scenes returned by the TF-IDF retriever.
+The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and compares TF-IDF with Ollama semantic retrieval. Set the embedding model before running it:
 
-## Baseline
+```bash
+export OLLAMA_EMBED_MODEL=granite-embedding:278m
+python scripts/evaluate_retrieval.py
+```
 
-The current ten-question evaluation reports:
+## Retrieval Results
 
-- Hit@1: 60%
-- Hit@3: 100%
+On the current ten-question evaluation set:
 
-This means the correct scene is currently retrieved in the top three for every evaluation question, while it is ranked first for six of ten questions.
+| Retriever | Hit@1 | Hit@3 |
+| --- | ---: | ---: |
+| TF-IDF | 60% | 100% |
+| Ollama semantic | 80% | 90% |
+
+Semantic retrieval ranks the expected scene first more often, while TF-IDF retrieves an expected scene within the top three more consistently on this small set. These results are a comparison checkpoint, not a universal conclusion.
 
 ## Screenplay Copyright
 
@@ -85,7 +93,7 @@ This means the correct scene is currently retrieved in the top three for every e
 
 - Add source citations to generated answers
 - Improve abstention and evidence validation
-- Compare semantic embeddings with the TF-IDF baseline
 - Add reusable retrieval indexes
+- Add a persistent Chroma retrieval path
 - Support multiple screenplays
 - Add IMSDb ingestion later
