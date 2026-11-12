@@ -1,3 +1,4 @@
 scikit-learn
 pytest
 langchain-ollama
+langchain-chroma
