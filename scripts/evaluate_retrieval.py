@@ -1,7 +1,8 @@
-"""Evaluate the TF-IDF retriever against a small screenplay question set."""
+"""Compare TF-IDF and Ollama semantic retrieval on screenplay questions."""
 
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 
@@ -11,6 +12,7 @@ sys.path.insert(0, str(SRC_ROOT))
 
 from screenplay_rag.ingest import load_script
 from screenplay_rag.retrieve import retrieve
+from screenplay_rag.semantic_retrieve import OllamaSemanticRetriever
 
 
 CASES_PATH = REPO_ROOT / "evaluation" / "retrieval_cases.json"
@@ -23,16 +25,23 @@ def load_cases(path: Path) -> list[dict[str, object]]:
         return json.load(file)
 
 
-def main() -> None:
-    scenes = load_script(str(SCRIPT_PATH))
-    cases = load_cases(CASES_PATH)
+def evaluate_retriever(
+    name: str,
+    retriever: Callable[
+        [str, list[dict[str, object]], int], list[dict[str, object]]
+    ],
+    scenes: list[dict[str, object]],
+    cases: list[dict[str, object]],
+) -> None:
+    """Print per-question results and aggregate metrics for one retriever."""
+    print(f"=== {name} ===")
     hit_at_1 = 0
     hit_at_3 = 0
 
     for case in cases:
         question = str(case["question"])
         expected = set(case["expected_scene_numbers"])
-        results = retrieve(question, scenes, top_k=3)
+        results = retriever(question, scenes, 3)
         returned = [int(result["scene_number"]) for result in results]
         is_hit_at_1 = bool(returned) and returned[0] in expected
         is_hit_at_3 = bool(expected.intersection(returned))
@@ -49,6 +58,19 @@ def main() -> None:
     case_count = len(cases)
     print(f"Hit@1: {hit_at_1}/{case_count} ({hit_at_1 / case_count:.1%})")
     print(f"Hit@3: {hit_at_3}/{case_count} ({hit_at_3 / case_count:.1%})")
+    print()
+
+
+def main() -> None:
+    scenes = load_script(str(SCRIPT_PATH))
+    cases = load_cases(CASES_PATH)
+    evaluate_retriever("TF-IDF", retrieve, scenes, cases)
+    evaluate_retriever(
+        "Ollama semantic",
+        OllamaSemanticRetriever(),
+        scenes,
+        cases,
+    )
 
 
 if __name__ == "__main__":
