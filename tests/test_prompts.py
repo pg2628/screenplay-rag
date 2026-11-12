@@ -1,5 +1,5 @@
 from screenplay_rag.prompts import build_prompt
-from screenplay_rag.roles import ASSISTANT_DIRECTOR
+from screenplay_rag.roles import ASSISTANT_DIRECTOR, CINEMATOGRAPHER
 
 
 def test_build_prompt_contains_role_question_and_scene_evidence():
@@ -40,3 +40,18 @@ def test_build_prompt_is_deterministic_for_empty_evidence():
 
     assert first == second
     assert "No screenplay scenes were retrieved." in first.user
+
+
+def test_build_prompt_includes_cinematographer_guidance():
+    prompt = build_prompt(
+        CINEMATOGRAPHER,
+        "How might this scene be photographed?",
+        [],
+    )
+
+    assert "Cinematographer" in prompt.system
+    assert CINEMATOGRAPHER.instructions in prompt.system
+    assert "visual_intent" in prompt.system
+    assert "Identify visual ideas as interpretations" in prompt.system
+    assert "Do not invent locations" in prompt.system
+    assert "not enough visual information" in prompt.system

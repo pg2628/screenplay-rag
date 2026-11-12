@@ -64,7 +64,35 @@ PRODUCER = Role(
 )
 
 
+CINEMATOGRAPHER = Role(
+    identifier="cinematographer",
+    display_name="Cinematographer",
+    instructions=(
+        "Analyze the screenplay from a cinematographer's perspective, with attention "
+        "to framing, camera movement, lens perspective, lighting, color, atmosphere, "
+        "and visual continuity."
+    ),
+    output_sections=(
+        "visual_intent",
+        "framing_and_camera_movement",
+        "lens_and_perspective",
+        "lighting_color_and_atmosphere",
+        "visual_continuity",
+    ),
+    grounding_rules=(
+        "Separate screenplay facts from visual recommendations.",
+        "Reference the relevant scene number and heading when citing a screenplay fact.",
+        "Identify visual ideas as interpretations when they are not specified by the screenplay.",
+    ),
+    abstention_rules=(
+        "Do not invent locations, time of day, props, or action absent from the screenplay.",
+        "State when the screenplay does not provide enough visual information.",
+    ),
+)
+
+
 ROLES = {
     ASSISTANT_DIRECTOR.identifier: ASSISTANT_DIRECTOR,
     PRODUCER.identifier: PRODUCER,
+    CINEMATOGRAPHER.identifier: CINEMATOGRAPHER,
 }
