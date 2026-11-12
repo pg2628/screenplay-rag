@@ -43,3 +43,30 @@ def test_answer_question_retrieves_builds_prompt_and_returns_answer():
     assert "Scene 1: EXT. FARM - EVENING" in provider.prompt.user
     assert "Scene 2: INT. HOUSE - NIGHT" not in provider.prompt.user
     assert ASSISTANT_DIRECTOR.instructions in provider.prompt.system
+
+
+def test_answer_question_uses_injected_retriever():
+    provider = FakeAnswerProvider()
+    retrieved_scene = {
+        "scene_number": 9,
+        "heading": "EXT. STUDIO LOT - DAY",
+        "text": "The crew prepares the set.",
+    }
+    calls = []
+
+    def fake_retriever(question, scenes, top_k):
+        calls.append((question, scenes, top_k))
+        return [retrieved_scene]
+
+    answer_question(
+        "What is being prepared?",
+        ASSISTANT_DIRECTOR,
+        [],
+        provider,
+        top_k=1,
+        retriever=fake_retriever,
+    )
+
+    assert calls == [("What is being prepared?", [], 1)]
+    assert "Scene 9: EXT. STUDIO LOT - DAY" in provider.prompt.user
+    assert "The crew prepares the set." in provider.prompt.user

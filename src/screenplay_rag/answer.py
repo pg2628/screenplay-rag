@@ -1,5 +1,6 @@
 """Orchestrate screenplay retrieval, prompt construction, and answer generation."""
 
+from collections.abc import Callable
 from typing import Protocol
 
 from .prompts import Prompt, build_prompt
@@ -19,8 +20,12 @@ def answer_question(
     scenes: list[dict[str, object]],
     provider: AnswerProvider,
     top_k: int = 3,
+    retriever: Callable[
+        [str, list[dict[str, object]], int], list[dict[str, object]]
+    ] | None = None,
 ) -> str:
     """Retrieve evidence, build a role prompt, and return the provider answer."""
-    retrieved_scenes = retrieve(question, scenes, top_k=top_k)
+    retrieval_function = retrieve if retriever is None else retriever
+    retrieved_scenes = retrieval_function(question, scenes, top_k)
     prompt = build_prompt(role, question, retrieved_scenes)
     return provider(prompt)
