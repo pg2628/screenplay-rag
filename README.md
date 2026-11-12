@@ -7,9 +7,9 @@ A learning-focused retrieval-augmented generation project built around screenpla
 ```text
 screenplay
     -> scene-aware ingestion
-    -> TF-IDF retrieval
+    -> TF-IDF, Ollama semantic, or Chroma retrieval
     -> role-specific system/user prompt
-    -> local Ollama answer
+    -> custom or LangChain Ollama answer
 ```
 
 ## Current Status
@@ -18,7 +18,8 @@ screenplay
 - Heading-aware text prepared for embeddings
 - TF-IDF and cosine-similarity retrieval
 - Ollama semantic retrieval with `granite-embedding:278m`
-- Assistant Director and Producer roles
+- Persistent Chroma retrieval
+- Assistant Director, Producer, and Cinematographer roles
 - Grounded prompts with screenplay evidence
 - Custom and parallel LangChain Ollama answer providers
 - Pytest test suite
@@ -59,6 +60,7 @@ Available roles:
 ```bash
 python assistant.py --role assistant_director
 python assistant.py --role producer
+python assistant.py --role cinematographer
 ```
 
 Run the retrieval evaluation workflow:
@@ -67,11 +69,17 @@ Run the retrieval evaluation workflow:
 python scripts/evaluate_retrieval.py
 ```
 
-The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and compares TF-IDF with Ollama semantic retrieval. Set the embedding model before running it:
+The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and compares TF-IDF, Ollama semantic retrieval, and Chroma retrieval. Set the embedding model before running it:
 
 ```bash
 export OLLAMA_EMBED_MODEL=granite-embedding:278m
 python scripts/evaluate_retrieval.py
+```
+
+Build the persistent Chroma index before running the Chroma comparison:
+
+```bash
+python scripts/build_chroma_index.py
 ```
 
 ## Retrieval Results
@@ -82,6 +90,7 @@ On the current ten-question evaluation set:
 | --- | ---: | ---: |
 | TF-IDF | 60% | 100% |
 | Ollama semantic | 80% | 90% |
+| Chroma semantic | 80% | 90% |
 
 Semantic retrieval ranks the expected scene first more often, while TF-IDF retrieves an expected scene within the top three more consistently on this small set. These results are a comparison checkpoint, not a universal conclusion.
 
@@ -93,7 +102,6 @@ Semantic retrieval ranks the expected scene first more often, while TF-IDF retri
 
 - Add source citations to generated answers
 - Improve abstention and evidence validation
-- Add reusable retrieval indexes
-- Add a persistent Chroma retrieval path
+- Add selectable retrievers and providers to the assistant CLI
 - Support multiple screenplays
 - Add IMSDb ingestion later
