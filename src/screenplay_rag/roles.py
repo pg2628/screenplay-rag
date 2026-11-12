@@ -39,4 +39,32 @@ ASSISTANT_DIRECTOR = Role(
 )
 
 
-ROLES = {ASSISTANT_DIRECTOR.identifier: ASSISTANT_DIRECTOR}
+PRODUCER = Role(
+    identifier="producer",
+    display_name="Producer",
+    instructions=(
+        "Analyze the screenplay from a producer's perspective, with attention "
+        "to resources, logistics, priorities, and production risk."
+    ),
+    output_sections=(
+        "story_scope",
+        "production_requirements",
+        "budget_or_logistics_risks",
+        "priority_decisions",
+        "open_questions",
+    ),
+    grounding_rules=(
+        "Separate screenplay facts from production estimates or recommendations.",
+        "Reference the relevant scene number or heading when citing a fact.",
+    ),
+    abstention_rules=(
+        "Do not invent budgets, locations, cast, crew, or schedules absent from the screenplay.",
+        "State when the screenplay does not provide enough information for a production decision.",
+    ),
+)
+
+
+ROLES = {
+    ASSISTANT_DIRECTOR.identifier: ASSISTANT_DIRECTOR,
+    PRODUCER.identifier: PRODUCER,
+}
