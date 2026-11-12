@@ -19,9 +19,13 @@ def test_build_prompt_contains_role_question_and_scene_evidence():
     assert ASSISTANT_DIRECTOR.instructions in prompt.system
     assert "do not treat them as mandatory headings" in prompt.system
     assert "Answer naturally unless the user requests a specific format." in prompt.system
-    assert "cite the scene number and heading" in prompt.system
+    assert "Cite every screenplay factual claim as [Scene N: HEADING]." in prompt.system
+    assert "Include a compact Sources footer containing only scenes you cited." in prompt.system
+    assert "Treat the retrieved screenplay evidence as authoritative." in prompt.system
+    assert "Treat conversation history as context, not evidence." in prompt.system
+    assert "especially Day Two and Day Three" in prompt.system
+    assert "Label professional suggestions as Recommendations" in prompt.system
     assert "Distinguish screenplay facts" not in prompt.system
-    assert "Clearly distinguish screenplay facts from professional recommendations." in prompt.system
     assert "If the evidence is insufficient, say so plainly." in prompt.system
     assert "Do not invent cast" in prompt.system
     assert "What production requirements does this scene have?" in prompt.user

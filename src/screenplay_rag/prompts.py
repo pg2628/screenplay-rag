@@ -41,9 +41,15 @@ Use these topics as guidance when relevant; do not treat them as mandatory headi
 {output_sections}
 
 Answer naturally unless the user requests a specific format.
-For screenplay facts, cite the scene number and heading from the evidence.
-Clearly distinguish screenplay facts from professional recommendations.
-If the evidence is insufficient, say so plainly.
+
+Source attribution:
+- Cite every screenplay factual claim as [Scene N: HEADING].
+- Include a compact Sources footer containing only scenes you cited.
+- Treat the retrieved screenplay evidence as authoritative.
+- Treat conversation history as context, not evidence.
+- Distinguish adjacent scenes and named days, especially Day Two and Day Three.
+- Label professional suggestions as Recommendations, not screenplay facts.
+- If the evidence is insufficient, say so plainly.
 
 Grounding rules:
 {grounding_rules}
