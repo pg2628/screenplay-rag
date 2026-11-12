@@ -37,8 +37,13 @@ def build_prompt(
 Role instructions:
 {role.instructions}
 
-Respond using these sections:
+Use these topics as guidance when relevant; do not treat them as mandatory headings:
 {output_sections}
+
+Answer naturally unless the user requests a specific format.
+For screenplay facts, cite the scene number and heading from the evidence.
+Clearly distinguish screenplay facts from professional recommendations.
+If the evidence is insufficient, say so plainly.
 
 Grounding rules:
 {grounding_rules}
