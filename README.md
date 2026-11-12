@@ -1,6 +1,6 @@
 # Screenplay RAG
 
-A learning-focused retrieval-augmented generation project built around screenplay data. The current proof of concept uses an original screenplay to parse scenes and retrieve relevant scenes for a question. Future Nolan scripts belong under `data/screenplays/`.
+A learning-focused retrieval-augmented generation project built around screenplay data. The current proof of concept uses an original screenplay to parse scenes and retrieve relevant scenes for a question. Future screenplays can belong under `data/screenplays/`.
 
 ## Architecture
 
@@ -8,7 +8,8 @@ A learning-focused retrieval-augmented generation project built around screenpla
 screenplay
     -> scene-aware ingestion
     -> TF-IDF retrieval
-    -> ranked scenes
+    -> role-specific system/user prompt
+    -> local Ollama answer
 ```
 
 ## Current Status
@@ -16,10 +17,11 @@ screenplay
 - Scene-aware screenplay parser
 - Heading-aware text prepared for embeddings
 - TF-IDF and cosine-similarity retrieval
+- Assistant Director and Producer roles
+- Grounded prompts with screenplay evidence
+- Local Ollama answer generation
 - Pytest test suite
 - Retrieval evaluation workflow with Hit@1 and Hit@3 metrics
-
-The current implementation retrieves screenplay passages. It does not yet generate answers with an LLM.
 
 ## Setup
 
@@ -30,10 +32,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install the project and development dependencies:
+Install the runtime and test dependencies:
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -r requirements.txt
 ```
 
 Run the tests:
@@ -44,10 +46,18 @@ python -m pytest
 
 ## Usage
 
-Run the interactive retrieval CLI:
+Set the Ollama model and run the role-based assistant:
 
 ```bash
-python -m screenplay_rag.retrieve
+export OLLAMA_MODEL=llama3.2
+python assistant.py --role assistant_director
+```
+
+Available roles:
+
+```bash
+python assistant.py --role assistant_director
+python assistant.py --role producer
 ```
 
 Run the retrieval evaluation workflow:
@@ -73,9 +83,9 @@ This means the correct scene is currently retrieved in the top three for every e
 
 ## Roadmap
 
+- Add source citations to generated answers
+- Improve abstention and evidence validation
 - Compare semantic embeddings with the TF-IDF baseline
 - Add reusable retrieval indexes
-- Add grounded answer generation
-- Add citations and abstention when the context is insufficient
 - Support multiple screenplays
 - Add IMSDb ingestion later
