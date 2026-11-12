@@ -1,4 +1,4 @@
-"""Compare TF-IDF and Ollama semantic retrieval on screenplay questions."""
+"""Compare TF-IDF, Ollama semantic, and Chroma retrieval."""
 
 import json
 import sys
@@ -11,12 +11,14 @@ SRC_ROOT = REPO_ROOT / "src"
 sys.path.insert(0, str(SRC_ROOT))
 
 from screenplay_rag.ingest import load_script
+from screenplay_rag.chroma_retrieve import ChromaRetriever
 from screenplay_rag.retrieve import retrieve
 from screenplay_rag.semantic_retrieve import OllamaSemanticRetriever
 
 
 CASES_PATH = REPO_ROOT / "evaluation" / "retrieval_cases.json"
 SCRIPT_PATH = REPO_ROOT / "data" / "script.txt"
+CHROMA_PATH = REPO_ROOT / "data" / "chroma"
 
 
 def load_cases(path: Path) -> list[dict[str, object]]:
@@ -71,6 +73,17 @@ def main() -> None:
         scenes,
         cases,
     )
+
+    if CHROMA_PATH.is_dir() and any(CHROMA_PATH.iterdir()):
+        print(f"Chroma index: available at {CHROMA_PATH}")
+        evaluate_retriever(
+            "Chroma semantic",
+            ChromaRetriever(persist_directory=str(CHROMA_PATH)),
+            scenes,
+            cases,
+        )
+    else:
+        print(f"Chroma index: unavailable at {CHROMA_PATH}; skipping")
 
 
 if __name__ == "__main__":
