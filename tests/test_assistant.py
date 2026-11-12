@@ -1,6 +1,6 @@
 import pytest
 
-from screenplay_rag.assistant import main, run
+from screenplay_rag.assistant import main, run, run_conversation
 from screenplay_rag.prompts import Prompt
 from screenplay_rag.roles import ASSISTANT_DIRECTOR, PRODUCER
 
@@ -34,11 +34,12 @@ def test_run_uses_fake_provider_and_prints_answer():
 def test_main_selects_producer_role():
     provider = FakeAnswerProvider()
     output = []
+    questions = iter(["What are the production risks?", "exit"])
 
     main(
         ["--role", "producer"],
         provider=provider,
-        input_fn=lambda prompt: "What are the production risks?",
+        input_fn=lambda prompt: next(questions),
         output_fn=output.append,
     )
 
@@ -51,3 +52,29 @@ def test_main_rejects_unknown_role(capsys):
         main(["--role", "cinematographer"])
 
     assert "invalid choice" in capsys.readouterr().err
+
+
+def test_conversation_includes_recent_history_in_follow_up_prompt():
+    class ConversationProvider:
+        def __init__(self):
+            self.prompts = []
+
+        def __call__(self, prompt: Prompt) -> str:
+            self.prompts.append(prompt)
+            return f"answer {len(self.prompts)}"
+
+    provider = ConversationProvider()
+    output = []
+    questions = iter(["What happens on Day Two?", "What should a producer watch?", "quit"])
+
+    run_conversation(
+        role=PRODUCER,
+        provider=provider,
+        input_fn=lambda prompt: next(questions),
+        output_fn=output.append,
+    )
+
+    assert output == ["answer 1", "answer 2"]
+    assert "What happens on Day Two?" in provider.prompts[1].user
+    assert "answer 1" in provider.prompts[1].user
+    assert "What should a producer watch?" in provider.prompts[1].user
