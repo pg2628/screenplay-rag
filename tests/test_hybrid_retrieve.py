@@ -44,6 +44,58 @@ def test_hybrid_retriever_fuses_normalized_scores_and_queries_full_corpus():
     assert [scene["score"] for scene in results] == [0.75, 0.5, 0.25]
 
 
+def test_hybrid_retriever_normalizes_negative_scores_before_filling_missing():
+    def lexical(query, scenes, top_k):
+        return [
+            {**scenes[0], "score": -0.2},
+            {**scenes[1], "score": -0.8},
+        ]
+
+    retriever = HybridRetriever(
+        lexical_retriever=lexical,
+        semantic_retriever=lambda query, scenes, top_k: [],
+        semantic_weight=0.0,
+    )
+
+    results = retriever("question", SCENES)
+
+    assert [scene["scene_number"] for scene in results] == [1, 2, 3]
+    assert results[2]["score"] == 0.0
+
+
+def test_hybrid_retriever_treats_missing_score_as_zero_after_normalization():
+    def lexical(query, scenes, top_k):
+        return [{**scenes[0]}, {**scenes[1], "score": 1.0}]
+
+    retriever = HybridRetriever(
+        lexical_retriever=lexical,
+        semantic_retriever=lambda query, scenes, top_k: [],
+        semantic_weight=0.0,
+    )
+
+    results = retriever("question", SCENES)
+
+    assert results[0]["scene_number"] == 2
+    assert results[1]["score"] == 0.0
+
+
+def test_hybrid_retriever_preserves_duplicate_scene_records():
+    duplicate_scenes = [SCENES[0], SCENES[0], SCENES[1]]
+
+    def scored_retriever(query, scenes, top_k):
+        return [{**scene, "score": 1.0} for scene in scenes]
+
+    retriever = HybridRetriever(
+        lexical_retriever=scored_retriever,
+        semantic_retriever=scored_retriever,
+    )
+
+    results = retriever("question", duplicate_scenes, top_k=2)
+
+    assert len(results) == 2
+    assert [scene["scene_number"] for scene in results] == [1, 1]
+
+
 def test_hybrid_weight_can_select_one_component():
     lexical = lambda query, scenes, top_k: scored_results([1.0, 0.5, 0.0])
     semantic = lambda query, scenes, top_k: scored_results([0.0, 1.0, 0.5])
@@ -78,6 +130,16 @@ def test_hybrid_retriever_handles_empty_inputs(query, scenes, top_k):
     )
 
     assert retriever(query, scenes, top_k) == []
+
+
+def test_hybrid_retriever_respects_top_k_bounds():
+    retriever = HybridRetriever(
+        lexical_retriever=lambda query, scenes, top_k: scored_results([1.0, 0.5, 0.0]),
+        semantic_retriever=lambda query, scenes, top_k: scored_results([0.0, 0.5, 1.0]),
+    )
+
+    assert len(retriever("question", SCENES, top_k=1)) == 1
+    assert len(retriever("question", SCENES, top_k=10)) == len(SCENES)
 
 
 def test_hybrid_retriever_rejects_invalid_weight():

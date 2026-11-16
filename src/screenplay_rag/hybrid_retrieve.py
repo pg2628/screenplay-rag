@@ -40,16 +40,16 @@ class HybridRetriever:
         candidate_count = len(scenes)
         lexical_results = self.lexical_retriever(query, scenes, candidate_count)
         semantic_results = self.semantic_retriever(query, scenes, candidate_count)
-        lexical_scores = self._scores_by_scene(lexical_results)
-        semantic_scores = self._scores_by_scene(semantic_results)
-        lexical_scores = self._normalize(lexical_scores, scenes)
-        semantic_scores = self._normalize(semantic_scores, scenes)
+        lexical_scores = self._normalize(self._scores_by_scene(lexical_results))
+        semantic_scores = self._normalize(self._scores_by_scene(semantic_results))
 
         ranked_scenes = sorted(
             scenes,
             key=lambda scene: (
-                (1.0 - self.semantic_weight) * lexical_scores[self._scene_key(scene)]
-                + self.semantic_weight * semantic_scores[self._scene_key(scene)]
+                (1.0 - self.semantic_weight)
+                * lexical_scores.get(self._scene_key(scene), 0.0)
+                + self.semantic_weight
+                * semantic_scores.get(self._scene_key(scene), 0.0)
             ),
             reverse=True,
         )
@@ -57,8 +57,9 @@ class HybridRetriever:
             {
                 **scene,
                 "score": (1.0 - self.semantic_weight)
-                * lexical_scores[self._scene_key(scene)]
-                + self.semantic_weight * semantic_scores[self._scene_key(scene)],
+                * lexical_scores.get(self._scene_key(scene), 0.0)
+                + self.semantic_weight
+                * semantic_scores.get(self._scene_key(scene), 0.0),
             }
             for scene in ranked_scenes[:top_k]
         ]
@@ -83,17 +84,17 @@ class HybridRetriever:
 
     @staticmethod
     def _normalize(
-        scores: dict[tuple[object, ...], float], scenes: list[dict[str, object]]
+        scores: dict[tuple[object, ...], float]
     ) -> dict[tuple[object, ...], float]:
-        values = [scores.get(HybridRetriever._scene_key(scene), 0.0) for scene in scenes]
+        if not scores:
+            return {}
+        values = list(scores.values())
         minimum = min(values)
         maximum = max(values)
         if minimum == maximum:
-            return {HybridRetriever._scene_key(scene): 0.0 for scene in scenes}
+            return {scene_key: 0.0 for scene_key in scores}
         return {
-            HybridRetriever._scene_key(scene): (
-                scores.get(HybridRetriever._scene_key(scene), 0.0) - minimum
-            )
+            scene_key: (score - minimum)
             / (maximum - minimum)
-            for scene in scenes
+            for scene_key, score in scores.items()
         }
