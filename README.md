@@ -55,6 +55,18 @@ export OLLAMA_MODEL=granite4.2:3b
 python assistant.py --role assistant_director
 ```
 
+The assistant defaults to the custom Ollama provider and the TF-IDF baseline.
+Choose alternate pipeline components explicitly when comparing implementations:
+
+```bash
+python assistant.py --role producer --retriever semantic --provider langchain
+python assistant.py --role cinematographer --retriever chroma --provider custom
+```
+
+Available retrievers are `tfidf`, `semantic`, and `chroma`. Available providers
+are `custom` and `langchain`. Build the Chroma index before selecting
+`--retriever chroma`.
+
 Available roles:
 
 ```bash
