@@ -54,4 +54,4 @@ def test_build_prompt_includes_cinematographer_guidance():
     assert "visual_intent" in prompt.system
     assert "Identify visual ideas as interpretations" in prompt.system
     assert "Do not invent locations" in prompt.system
-    assert "not enough visual information" in prompt.system
+    assert "does not provide enough visual information" in prompt.system
