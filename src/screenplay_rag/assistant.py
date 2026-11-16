@@ -5,6 +5,7 @@ from collections.abc import Callable
 
 from .answer import AnswerProvider, answer_question
 from .chroma_retrieve import ChromaRetriever
+from .hybrid_retrieve import HybridRetriever
 from .ingest import load_script
 from .langchain_ollama import LangChainOllamaProvider
 from .ollama import OllamaProvider
@@ -14,7 +15,7 @@ from .roles import ASSISTANT_DIRECTOR, ROLES, Role
 from .semantic_retrieve import OllamaSemanticRetriever
 
 MAX_HISTORY_TURNS = 6
-RETRIEVER_NAMES = ("tfidf", "semantic", "chroma")
+RETRIEVER_NAMES = ("tfidf", "semantic", "chroma", "hybrid")
 PROVIDER_NAMES = ("custom", "langchain")
 Retriever = Callable[[str, list[dict[str, object]], int], list[dict[str, object]]]
 
@@ -27,6 +28,8 @@ def build_retriever(name: str) -> Retriever:
         return OllamaSemanticRetriever()
     if name == "chroma":
         return ChromaRetriever()
+    if name == "hybrid":
+        return HybridRetriever()
     raise ValueError(f"Unknown retriever: {name}")
 
 

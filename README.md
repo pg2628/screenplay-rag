@@ -7,7 +7,7 @@ A learning-focused retrieval-augmented generation project built around screenpla
 ```text
 screenplay
     -> scene-aware ingestion
-    -> TF-IDF, Ollama semantic, or Chroma retrieval
+    -> TF-IDF, hybrid, Ollama semantic, or Chroma retrieval
     -> role-specific system/user prompt
     -> custom or LangChain Ollama answer
 ```
@@ -18,6 +18,7 @@ screenplay
 - Heading-aware text prepared for embeddings
 - TF-IDF and cosine-similarity retrieval
 - Ollama semantic retrieval with `granite-embedding:278m`
+- Hybrid TF-IDF and semantic score fusion
 - Persistent Chroma retrieval
 - Assistant Director, Producer, and Cinematographer roles
 - Grounded prompts with screenplay evidence
@@ -61,11 +62,17 @@ Choose alternate pipeline components explicitly when comparing implementations:
 ```bash
 python assistant.py --role producer --retriever semantic --provider langchain
 python assistant.py --role cinematographer --retriever chroma --provider custom
+python assistant.py --role assistant_director --retriever hybrid --provider langchain
 ```
 
-Available retrievers are `tfidf`, `semantic`, and `chroma`. Available providers
-are `custom` and `langchain`. Build the Chroma index before selecting
-`--retriever chroma`.
+Available retrievers are `tfidf`, `semantic`, `chroma`, and `hybrid`. Available
+providers are `custom` and `langchain`. Build the Chroma index before selecting
+`--retriever chroma`. Hybrid retrieval uses equal lexical and semantic weight by
+default; set `RAG_SEMANTIC_WEIGHT` to a value from `0.0` to `1.0` to adjust it:
+
+```bash
+export RAG_SEMANTIC_WEIGHT=0.7
+```
 
 Available roles:
 
@@ -81,7 +88,7 @@ Run the retrieval evaluation workflow:
 python scripts/evaluate_retrieval.py
 ```
 
-The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and compares TF-IDF, Ollama semantic retrieval, and Chroma retrieval. Set the embedding model before running it:
+The evaluation workflow uses the cases in `evaluation/retrieval_cases.json` and compares TF-IDF, hybrid, Ollama semantic retrieval, and Chroma retrieval. Set the embedding model before running it:
 
 ```bash
 export OLLAMA_EMBED_MODEL=granite-embedding:278m
@@ -114,6 +121,6 @@ Semantic retrieval ranks the expected scene first more often, while TF-IDF retri
 
 - Add source citations to generated answers
 - Improve abstention and evidence validation
-- Add selectable retrievers and providers to the assistant CLI
+- Tune hybrid retrieval against a larger evaluation set
 - Support multiple screenplays
 - Add IMSDb ingestion later

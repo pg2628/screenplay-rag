@@ -1,4 +1,4 @@
-"""Compare TF-IDF, Ollama semantic, and Chroma retrieval."""
+"""Compare TF-IDF, hybrid, Ollama semantic, and Chroma retrieval."""
 
 import json
 import sys
@@ -12,6 +12,7 @@ sys.path.insert(0, str(SRC_ROOT))
 
 from screenplay_rag.ingest import load_script
 from screenplay_rag.chroma_retrieve import ChromaRetriever
+from screenplay_rag.hybrid_retrieve import HybridRetriever
 from screenplay_rag.retrieve import retrieve
 from screenplay_rag.semantic_retrieve import OllamaSemanticRetriever
 
@@ -67,6 +68,7 @@ def main() -> None:
     scenes = load_script(str(SCRIPT_PATH))
     cases = load_cases(CASES_PATH)
     evaluate_retriever("TF-IDF", retrieve, scenes, cases)
+    evaluate_retriever("Hybrid", HybridRetriever(), scenes, cases)
     evaluate_retriever(
         "Ollama semantic",
         OllamaSemanticRetriever(),
