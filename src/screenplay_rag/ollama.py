@@ -18,6 +18,7 @@ class OllamaProvider:
         self.model = model or os.environ.get("OLLAMA_MODEL")
         if not self.model:
             raise RuntimeError("OLLAMA_MODEL must name an installed Ollama model")
+        self.timeout = float(os.environ.get("OLLAMA_TIMEOUT", "600"))
 
     def __call__(self, prompt: Prompt) -> str:
         payload = {
@@ -36,9 +37,13 @@ class OllamaProvider:
         )
 
         try:
-            with urlopen(request, timeout=120) as response:
+            with urlopen(request, timeout=self.timeout) as response:
                 response_data = json.loads(response.read().decode("utf-8"))
-        except (OSError, TimeoutError) as error:
+        except TimeoutError as error:
+            raise RuntimeError(
+                f"Ollama chat request timed out after {self.timeout:g} seconds"
+            ) from error
+        except OSError as error:
             raise RuntimeError("Could not connect to the Ollama chat API") from error
         except (json.JSONDecodeError, UnicodeDecodeError) as error:
             raise RuntimeError("Ollama returned invalid JSON") from error

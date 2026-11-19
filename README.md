@@ -78,6 +78,8 @@ screenplay-rag --role assistant_director
 ```
 
 The assistant defaults to the custom Ollama provider and the TF-IDF baseline.
+The custom provider waits up to 10 minutes for a response by default; set
+`OLLAMA_TIMEOUT` to change the timeout in seconds.
 Choose alternate pipeline components explicitly when comparing implementations:
 
 ```bash
