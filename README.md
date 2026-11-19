@@ -36,13 +36,13 @@ Start with the default TF-IDF retriever and custom Ollama provider:
 
 ```bash
 export OLLAMA_MODEL=granite4.2:3b
-python assistant.py --role producer
+screenplay-rag --role producer
 ```
 
 Run the completed two-stage hybrid retrieval and reranking path:
 
 ```bash
-python assistant.py --role producer --retriever hybrid --reranker tfidf --candidate-count 10
+screenplay-rag --role producer --retriever hybrid --reranker tfidf --candidate-count 10
 ```
 
 The reranker reduces broader candidate scenes to the final `top_k` evidence used in the prompt. Answers cite retrieved scenes and abstain when evidence or citations are insufficient.
@@ -56,10 +56,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install the runtime and test dependencies:
+Install the project and its development dependencies in editable mode:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -e ".[dev]"
 ```
 
 Run the tests:
@@ -74,18 +74,20 @@ Set the Ollama model and run the role-based assistant:
 
 ```bash
 export OLLAMA_MODEL=granite4.2:3b
-python assistant.py --role assistant_director
+screenplay-rag --role assistant_director
 ```
 
 The assistant defaults to the custom Ollama provider and the TF-IDF baseline.
 Choose alternate pipeline components explicitly when comparing implementations:
 
 ```bash
-python assistant.py --role producer --retriever semantic --provider langchain
-python assistant.py --role cinematographer --retriever chroma --provider custom
-python assistant.py --role assistant_director --retriever hybrid --provider langchain
-python assistant.py --role producer --retriever hybrid --reranker tfidf --candidate-count 10
+screenplay-rag --role producer --retriever semantic --provider langchain
+screenplay-rag --role cinematographer --retriever chroma --provider custom
+screenplay-rag --role assistant_director --retriever hybrid --provider langchain
+screenplay-rag --role producer --retriever hybrid --reranker tfidf --candidate-count 10
 ```
+
+The assistant can also be started with `python -m screenplay_rag`.
 
 Available retrievers are `tfidf`, `semantic`, `chroma`, and `hybrid`. Available
 providers are `custom` and `langchain`. Reranking is optional and is enabled with
@@ -101,9 +103,9 @@ export RAG_SEMANTIC_WEIGHT=0.7
 Available roles:
 
 ```bash
-python assistant.py --role assistant_director
-python assistant.py --role producer
-python assistant.py --role cinematographer
+screenplay-rag --role assistant_director
+screenplay-rag --role producer
+screenplay-rag --role cinematographer
 ```
 
 Run the retrieval evaluation workflow:

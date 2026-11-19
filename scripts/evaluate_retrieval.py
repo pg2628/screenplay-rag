@@ -1,14 +1,11 @@
 """Compare TF-IDF, hybrid, Ollama semantic, and Chroma retrieval."""
 
 import json
-import sys
 from collections.abc import Callable
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src"
-sys.path.insert(0, str(SRC_ROOT))
 
 from screenplay_rag.ingest import load_script
 from screenplay_rag.chroma_retrieve import ChromaRetriever

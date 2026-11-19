@@ -1,12 +1,9 @@
 """Build a persistent Chroma index from screenplay scenes."""
 
-import sys
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src"
-sys.path.insert(0, str(SRC_ROOT))
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
