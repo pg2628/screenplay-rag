@@ -1,5 +1,7 @@
 import re
 
+import pytest
+
 from screenplay_rag.answer import answer_question
 from screenplay_rag.prompts import Prompt
 from screenplay_rag.roles import ASSISTANT_DIRECTOR
@@ -84,6 +86,71 @@ def test_answer_question_abstains_without_retrieved_evidence():
         [],
         provider,
         retriever=lambda question, scenes, top_k: [],
+    )
+
+    from screenplay_rag.grounding import NO_EVIDENCE_MESSAGE
+
+    assert answer == NO_EVIDENCE_MESSAGE
+    assert provider.prompt is None
+
+
+def test_answer_question_reranks_candidates_before_prompt_and_provider():
+    provider = FakeAnswerProvider()
+    scenes = [
+        {"scene_number": number, "heading": f"Scene {number}", "text": "Action"}
+        for number in (1, 2, 3)
+    ]
+    reranker_calls = []
+
+    def retriever(question, available_scenes, top_k):
+        assert top_k == 3
+        return available_scenes
+
+    def reranker(query, candidates, top_k):
+        reranker_calls.append((query, candidates, top_k))
+        return candidates[:1]
+
+    answer = answer_question(
+        "What happens?",
+        ASSISTANT_DIRECTOR,
+        scenes,
+        provider,
+        top_k=1,
+        retriever=retriever,
+        reranker=reranker,
+        candidate_count=3,
+    )
+
+    assert answer == "fake grounded answer [Scene 1]"
+    assert reranker_calls == [("What happens?", scenes, 1)]
+    assert "Scene 1: Scene 1" in provider.prompt.user
+    assert "Scene 2: Scene 2" not in provider.prompt.user
+
+
+def test_answer_question_rejects_invalid_candidate_count():
+    provider = FakeAnswerProvider()
+
+    with pytest.raises(ValueError, match="candidate_count"):
+        answer_question(
+            "What happens?",
+            ASSISTANT_DIRECTOR,
+            [{"scene_number": 1, "heading": "Scene 1", "text": "Action"}],
+            provider,
+            reranker=lambda query, candidates, top_k: candidates,
+            candidate_count=0,
+        )
+
+
+def test_answer_question_abstains_when_reranker_returns_no_candidates():
+    provider = FakeAnswerProvider()
+
+    answer = answer_question(
+        "What happens?",
+        ASSISTANT_DIRECTOR,
+        [{"scene_number": 1, "heading": "Scene 1", "text": "Action"}],
+        provider,
+        retriever=lambda question, scenes, top_k: scenes,
+        reranker=lambda query, candidates, top_k: [],
     )
 
     from screenplay_rag.grounding import NO_EVIDENCE_MESSAGE

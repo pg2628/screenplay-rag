@@ -13,6 +13,7 @@ sys.path.insert(0, str(SRC_ROOT))
 from screenplay_rag.ingest import load_script
 from screenplay_rag.chroma_retrieve import ChromaRetriever
 from screenplay_rag.hybrid_retrieve import HybridRetriever
+from screenplay_rag.rerank import TfidfReranker
 from screenplay_rag.retrieve import retrieve
 from screenplay_rag.semantic_retrieve import OllamaSemanticRetriever
 
@@ -68,7 +69,17 @@ def main() -> None:
     scenes = load_script(str(SCRIPT_PATH))
     cases = load_cases(CASES_PATH)
     evaluate_retriever("TF-IDF", retrieve, scenes, cases)
-    evaluate_retriever("Hybrid", HybridRetriever(), scenes, cases)
+
+    hybrid_retriever = HybridRetriever()
+    evaluate_retriever("Hybrid", hybrid_retriever, scenes, cases)
+
+    reranker = TfidfReranker()
+
+    def hybrid_reranked(question: str, available_scenes: list[dict[str, object]], top_k: int):
+        candidates = hybrid_retriever(question, available_scenes, max(top_k * 3, top_k))
+        return reranker(question, candidates, top_k)
+
+    evaluate_retriever("Hybrid + reranking", hybrid_reranked, scenes, cases)
     evaluate_retriever(
         "Ollama semantic",
         OllamaSemanticRetriever(),

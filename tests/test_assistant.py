@@ -72,6 +72,50 @@ def test_main_accepts_retriever_and_provider_flags():
     assert retrieved == [("What are the production risks?", 3)]
 
 
+def test_main_accepts_reranker_and_candidate_count_flags():
+    provider = FakeAnswerProvider()
+    retriever_calls = []
+    reranker_calls = []
+
+    class FakeReranker:
+        def __call__(self, query, candidates, top_k):
+            reranker_calls.append((query, len(candidates), top_k))
+            return candidates[:1]
+
+    reranker = FakeReranker()
+
+    def retriever(query, scenes, top_k):
+        retriever_calls.append((query, top_k))
+        return scenes[:top_k]
+
+    questions = iter(["What happens?", "exit"])
+
+    main(
+        [
+            "--role",
+            "producer",
+            "--retriever",
+            "tfidf",
+            "--reranker",
+            "tfidf",
+            "--candidate-count",
+            "8",
+        ],
+        provider=provider,
+        retriever=retriever,
+        reranker=reranker,
+        candidate_count=8,
+        input_fn=lambda prompt: next(questions),
+        output_fn=lambda answer: None,
+    )
+
+    assert retriever_calls == [("What happens?", 8)]
+    assert reranker_calls
+    assert reranker_calls[0][0] == "What happens?"
+    assert reranker_calls[0][1] <= 8
+    assert reranker_calls[0][2] == 3
+
+
 def test_build_retriever_uses_tfidf_baseline():
     assert build_retriever("tfidf").__name__ == "retrieve"
 

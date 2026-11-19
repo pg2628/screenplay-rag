@@ -10,6 +10,7 @@ from .ingest import load_script
 from .langchain_ollama import LangChainOllamaProvider
 from .ollama import OllamaProvider
 from .prompts import Prompt
+from .rerank import TfidfReranker
 from .retrieve import retrieve
 from .roles import ASSISTANT_DIRECTOR, ROLES, Role
 from .semantic_retrieve import OllamaSemanticRetriever
@@ -17,6 +18,7 @@ from .semantic_retrieve import OllamaSemanticRetriever
 MAX_HISTORY_TURNS = 6
 RETRIEVER_NAMES = ("tfidf", "semantic", "chroma", "hybrid")
 PROVIDER_NAMES = ("custom", "langchain")
+RERANKER_NAMES = ("none", "tfidf")
 Retriever = Callable[[str, list[dict[str, object]], int], list[dict[str, object]]]
 
 
@@ -31,6 +33,15 @@ def build_retriever(name: str) -> Retriever:
     if name == "hybrid":
         return HybridRetriever()
     raise ValueError(f"Unknown retriever: {name}")
+
+
+def build_reranker(name: str):
+    """Build a reranker by its CLI-facing name."""
+    if name == "none":
+        return None
+    if name == "tfidf":
+        return TfidfReranker()
+    raise ValueError(f"Unknown reranker: {name}")
 
 
 def build_provider(name: str) -> AnswerProvider:
@@ -77,6 +88,8 @@ def run(
     retriever: Retriever | None = None,
     input_fn: Callable[[str], str] = input,
     output_fn: Callable[[str], None] = print,
+    reranker: object | None = None,
+    candidate_count: int = 10,
 ) -> str:
     """Read one question, answer it in the selected role, and print it."""
     scenes = load_script("data/script.txt")
@@ -87,6 +100,8 @@ def run(
         scenes,
         provider or OllamaProvider(),
         retriever=retriever,
+        reranker=reranker,
+        candidate_count=candidate_count,
     )
     output_fn(answer)
     return answer
@@ -98,6 +113,8 @@ def run_conversation(
     retriever: Retriever | None = None,
     input_fn: Callable[[str], str] = input,
     output_fn: Callable[[str], None] = print,
+    reranker: object | None = None,
+    candidate_count: int = 10,
 ) -> None:
     """Keep answering questions until the user exits or sends EOF."""
     scenes = load_script("data/script.txt")
@@ -119,6 +136,8 @@ def run_conversation(
             scenes,
             _ConversationProvider(answer_provider, history, question),
             retriever=retriever,
+            reranker=reranker,
+            candidate_count=candidate_count,
         )
         output_fn(answer)
 
@@ -129,18 +148,26 @@ def main(
     retriever: Retriever | None = None,
     input_fn: Callable[[str], str] = input,
     output_fn: Callable[[str], None] = print,
+    reranker: object | None = None,
+    candidate_count: int | None = None,
 ) -> None:
     parser = argparse.ArgumentParser(description="Ask a screenplay role for guidance.")
     parser.add_argument("--role", choices=sorted(ROLES), required=True)
     parser.add_argument("--retriever", choices=RETRIEVER_NAMES, default="tfidf")
     parser.add_argument("--provider", choices=PROVIDER_NAMES, default="custom")
+    parser.add_argument("--reranker", choices=RERANKER_NAMES, default="none")
+    parser.add_argument("--candidate-count", type=int, default=10)
     arguments = parser.parse_args(argv)
+    if arguments.candidate_count <= 0:
+        parser.error("--candidate-count must be greater than zero")
     run_conversation(
         ROLES[arguments.role],
         provider or build_provider(arguments.provider),
         retriever or build_retriever(arguments.retriever),
         input_fn,
         output_fn,
+        reranker if reranker is not None else build_reranker(arguments.reranker),
+        arguments.candidate_count if candidate_count is None else candidate_count,
     )
 
 
