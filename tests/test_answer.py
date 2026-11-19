@@ -1,3 +1,5 @@
+import re
+
 from screenplay_rag.answer import answer_question
 from screenplay_rag.prompts import Prompt
 from screenplay_rag.roles import ASSISTANT_DIRECTOR
@@ -9,7 +11,8 @@ class FakeAnswerProvider:
 
     def __call__(self, prompt: Prompt) -> str:
         self.prompt = prompt
-        return "fake grounded answer"
+        scene_number = re.search(r"Scene (\d+):", prompt.user).group(1)
+        return f"fake grounded answer [Scene {scene_number}]"
 
 
 def test_answer_question_retrieves_builds_prompt_and_returns_answer():
@@ -37,7 +40,7 @@ def test_answer_question_retrieves_builds_prompt_and_returns_answer():
         top_k=1,
     )
 
-    assert answer == "fake grounded answer"
+    assert answer == "fake grounded answer [Scene 1]"
     assert provider.prompt is not None
     assert "What happens at the farm?" in provider.prompt.user
     assert "Scene 1: EXT. FARM - EVENING" in provider.prompt.user
@@ -70,3 +73,43 @@ def test_answer_question_uses_injected_retriever():
     assert calls == [("What is being prepared?", [], 1)]
     assert "Scene 9: EXT. STUDIO LOT - DAY" in provider.prompt.user
     assert "The crew prepares the set." in provider.prompt.user
+
+
+def test_answer_question_abstains_without_retrieved_evidence():
+    provider = FakeAnswerProvider()
+
+    answer = answer_question(
+        "What is known?",
+        ASSISTANT_DIRECTOR,
+        [],
+        provider,
+        retriever=lambda question, scenes, top_k: [],
+    )
+
+    from screenplay_rag.grounding import NO_EVIDENCE_MESSAGE
+
+    assert answer == NO_EVIDENCE_MESSAGE
+    assert provider.prompt is None
+
+
+def test_answer_question_uses_injected_validator():
+    provider = FakeAnswerProvider()
+    validation_calls = []
+
+    def validator(answer, retrieved_scenes):
+        validation_calls.append((answer, retrieved_scenes))
+        from screenplay_rag.grounding import GroundingResult
+
+        return GroundingResult(False, frozenset(), "custom abstention")
+
+    answer = answer_question(
+        "What happens?",
+        ASSISTANT_DIRECTOR,
+        [{"scene_number": 1, "heading": "Scene 1", "text": "Action"}],
+        provider,
+        retriever=lambda question, scenes, top_k: scenes,
+        validator=validator,
+    )
+
+    assert answer == "custom abstention"
+    assert len(validation_calls) == 1

@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from screenplay_rag.assistant import build_retriever, main, run, run_conversation
@@ -11,7 +13,8 @@ class FakeAnswerProvider:
 
     def __call__(self, prompt: Prompt) -> str:
         self.prompt = prompt
-        return "fake Assistant Director answer"
+        scene_number = re.search(r"Scene (\d+):", prompt.user).group(1)
+        return f"fake Assistant Director answer [Scene {scene_number}]"
 
 
 def test_run_uses_fake_provider_and_prints_answer():
@@ -25,8 +28,8 @@ def test_run_uses_fake_provider_and_prints_answer():
         output_fn=output.append,
     )
 
-    assert answer == "fake Assistant Director answer"
-    assert output == ["fake Assistant Director answer"]
+    assert answer.startswith("fake Assistant Director answer [Scene ")
+    assert output == [answer]
     assert provider.prompt is not None
     assert "What happens on Day Two?" in provider.prompt.user
 
@@ -43,7 +46,7 @@ def test_main_selects_producer_role():
         output_fn=output.append,
     )
 
-    assert output == ["fake Assistant Director answer"]
+    assert output[0].startswith("fake Assistant Director answer [Scene ")
     assert PRODUCER.instructions in provider.prompt.system
 
 
@@ -65,7 +68,7 @@ def test_main_accepts_retriever_and_provider_flags():
         output_fn=output.append,
     )
 
-    assert output == ["fake Assistant Director answer"]
+    assert output[0].startswith("fake Assistant Director answer [Scene ")
     assert retrieved == [("What are the production risks?", 3)]
 
 
@@ -87,7 +90,8 @@ def test_conversation_includes_recent_history_in_follow_up_prompt():
 
         def __call__(self, prompt: Prompt) -> str:
             self.prompts.append(prompt)
-            return f"answer {len(self.prompts)}"
+            scene_number = re.search(r"Scene (\d+):", prompt.user).group(1)
+            return f"answer {len(self.prompts)} [Scene {scene_number}]"
 
     provider = ConversationProvider()
     output = []
@@ -100,7 +104,8 @@ def test_conversation_includes_recent_history_in_follow_up_prompt():
         output_fn=output.append,
     )
 
-    assert output == ["answer 1", "answer 2"]
+    assert output[0].startswith("answer 1 [Scene ")
+    assert output[1].startswith("answer 2 [Scene ")
     assert "What happens on Day Two?" in provider.prompts[1].user
     assert "answer 1" in provider.prompts[1].user
     assert "What should a producer watch?" in provider.prompts[1].user

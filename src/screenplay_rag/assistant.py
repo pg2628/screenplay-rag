@@ -113,14 +113,14 @@ def run_conversation(
         if question.lower() in {"exit", "quit"}:
             break
 
-        answer_question(
+        answer = answer_question(
             question,
             role,
             scenes,
             _ConversationProvider(answer_provider, history, question),
             retriever=retriever,
         )
-        output_fn(history[-1][1])
+        output_fn(answer)
 
 
 def main(

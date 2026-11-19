@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from typing import Protocol
 
+from .grounding import GroundingResult, NO_EVIDENCE_MESSAGE, validate_answer
 from .prompts import Prompt, build_prompt
 from .retrieve import retrieve
 from .roles import Role
@@ -14,6 +15,14 @@ class AnswerProvider(Protocol):
     def __call__(self, prompt: Prompt) -> str: ...
 
 
+class AnswerValidator(Protocol):
+    """Callable interface for validating generated answers."""
+
+    def __call__(
+        self, answer: str, retrieved_scenes: list[dict[str, object]]
+    ) -> GroundingResult: ...
+
+
 def answer_question(
     question: str,
     role: Role,
@@ -23,9 +32,16 @@ def answer_question(
     retriever: Callable[
         [str, list[dict[str, object]], int], list[dict[str, object]]
     ] | None = None,
+    validator: AnswerValidator | None = None,
 ) -> str:
-    """Retrieve evidence, build a role prompt, and return the provider answer."""
+    """Retrieve evidence, generate an answer, and validate its citations."""
     retrieval_function = retrieve if retriever is None else retriever
     retrieved_scenes = retrieval_function(question, scenes, top_k)
+    if not retrieved_scenes:
+        return NO_EVIDENCE_MESSAGE
+
     prompt = build_prompt(role, question, retrieved_scenes)
-    return provider(prompt)
+    answer = provider(prompt)
+    validation_function = validate_answer if validator is None else validator
+    validation = validation_function(answer, retrieved_scenes)
+    return answer if validation.valid else validation.reason
