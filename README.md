@@ -1,6 +1,6 @@
 # Screenplay RAG
 
-A learning-focused, resume-ready screenplay RAG project built around scene-aware retrieval, reranking, role-specific prompts, local generation, and citation grounding.
+A learning-focused screenplay RAG project showcase built around scene-aware retrieval, reranking, role-specific prompts, local generation, and citation grounding.
 
 ## Architecture
 
